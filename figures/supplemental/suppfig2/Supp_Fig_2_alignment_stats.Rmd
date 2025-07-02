@@ -1,0 +1,78 @@
+---
+title: "RNA Dynamcis and Epitranscriptomics Lab"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+# Supplementary Figure 1
+
+- Barplot showing the # reads mapped per modification and replicate for hac and sup
+
+```{r load-packages, message=FALSE, echo=FALSE}
+
+pkgs <- c("openintro","tidyverse","backports","here","skimr","dplyr", "ggplot2", "ggsci","ggforce",
+          "janitor","readxl","xlsx", "MetBrewer","ggrepel", "usethis", "ggpubr","scales")
+
+lapply(pkgs, library, character.only = TRUE)
+
+```
+
+## Barplot of # reads per modification
+
+
+
+```{r barplot_num_reads}
+
+# Task 1: Import data from Google sheets and set order
+
+library(googlesheets4)
+
+raw <- read_sheet("https://docs.google.com/spreadsheets/d/10dQev5qroKDvTcZ479MzsZSRu3xP34irR_zVJvch8ss/edit?gid=148108569#gid=148108569", sheet = 2)
+
+
+raw$sample <- factor(raw$sample, levels = c("UNM","m6A","Y","m1Y","m5U","m5C","hm5C","ac4C"))
+
+# Task 2: Custom theme
+
+t <- theme(
+  legend.text = element_text( size = 15),
+  legend.position = "bottom",
+  axis.text = element_text(size=13),
+  axis.text.x = element_text(angle = 35, hjust = 1),
+  axis.title=element_text(size=15),
+  panel.grid.major.y = element_line(color = "grey90"),
+  panel.grid.minor.y = element_line(color = "grey90"),
+)
+
+# Task 3: Barplot of Reads
+
+ggplot(raw, aes(x = sample, y = reads, fill = replicate)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  facet_wrap(~model, nrow = 2) +
+  scale_y_log10(
+    labels = scales::label_number(accuracy = 1),
+    breaks = scales::log_breaks(),
+  ) +
+  scale_fill_manual(values = c("rep1" = "grey40", "rep2" = "grey60", "rep3" = "grey80")) +
+  labs(
+    x = "",
+    y = "uniquely aligned reads",
+    fill = "Replicate"
+  ) +
+  theme_pubr() + t
+
+# Save the plot as a PDF to the specified directory
+ggsave(
+  filename = "/Users/gregordiensthuber/Library/CloudStorage/Dropbox/79.ONT_basecalling_models_benchmarking/__code/Supp_Fig_1/barplot_alg_reads.pdf",
+  plot = last_plot(),  
+  width = 12,  
+  height = 6,  
+  units = "in"  # Units in inches
+)
+
+
+
+```
+
+
