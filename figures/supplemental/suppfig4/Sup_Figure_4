@@ -1,0 +1,85 @@
+### The input files for this script can be found in figures/main/fig3_in_vivo
+
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(pROC)
+library(PRROC)
+
+# Define dataset paths
+datasets <- list(
+  yeast_pseudoU = list(
+    bedgraph = "BY4741-1_rep2.bedgraph",
+    reference = "Yeast_rRNAmods_track.bed",
+    mod = "Ψ"
+  ),
+  coli_pseudoU = list(
+    bedgraph = "BW25113_R1_rep1.bedgraph",
+    reference = "rRNA_Ecoli_Mods.bed",
+    mod = "Ψ"
+  ),
+  yeast_m5C = list(
+    bedgraph = "BY4741-1_rep2.bedgraph",
+    reference = "Yeast_rRNAmods_track.bed",
+    mod = "m5C"
+  ),
+  coli_m5C = list(
+    bedgraph = "BW25113_R1_rep1.bedgraph",
+    reference = "rRNA_Ecoli_Mods.bed",
+    mod = "m5C"
+  )
+)
+
+# Function to process dataset and plot both ROC and PR curves
+process_dataset <- function(bedgraph_path, reference_path, mod_type, plot_title) {
+  # Load data
+  modkit_data <- read.table(bedgraph_path)
+  ref_data <- read.table(reference_path, header = FALSE)
+  
+  # Process modkit
+  df <- modkit_data %>%
+    mutate(position = paste(V1, V3, sep = ":"),
+           fraction_modified = V4) %>%
+    select(position, fraction_modified)
+  
+  # Process reference
+  ref_data <- ref_data %>%
+    filter(grepl(mod_type, V4)) %>%
+    mutate(position = paste(V1, V3, sep = ":"),
+           modification = V4) %>%
+    select(position, modification)
+  
+  # Merge & label
+  df <- df %>%
+    left_join(ref_data, by = "position") %>%
+    mutate(modification = ifelse(is.na(modification), "unmodified", modification),
+           actual = ifelse(modification == mod_type, 1, 0))
+  
+  # === PR Curve ===
+  scores_class0 <- df$fraction_modified[df$actual == 1]
+  scores_class1 <- df$fraction_modified[df$actual == 0]
+  pr <- pr.curve(scores.class0 = scores_class0,
+                 scores.class1 = scores_class1,
+                 curve = TRUE)
+  
+  plot(pr,
+       col = "#E58112",
+       main = paste("PR Curve:", plot_title, "\nAUC =", round(pr$auc.integral, 3)),
+       lwd = 4)
+  
+  # === ROC Curve ===
+  roc_obj <- roc(df$actual, df$fraction_modified)
+  auc_value <- roc_obj$auc
+  
+  plot(roc_obj,
+       col = "#1F77B4",
+       main = paste("ROC Curve:", plot_title, "\nAUC =", round(auc_value, 3)),
+       lwd = 4)
+}
+
+# Run all 4 datasets and show both PR and ROC curves
+for (name in names(datasets)) {
+  ds <- datasets[[name]]
+  process_dataset(ds$bedgraph, ds$reference, ds$mod, gsub("_", " ", name))
+}
