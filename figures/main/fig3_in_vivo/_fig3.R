@@ -192,12 +192,6 @@ plot <- ggplot(df, aes(x = reorder(position, -fraction_modified), y = fraction_m
   )
 
 
-
-
-
-
-
-
 ### Panel D
 
 
@@ -310,6 +304,71 @@ plot <- ggplot(df, aes(x = reorder(position, -fraction_modified), y = fraction_m
   )
 
 
+### Confusion matrices
+
+# Function to plot confusion matrix
+plot_conf_matrix <- function(data_path, reference_path, mod_type) {
+  # Load and process modkit data
+  df <- read.table(data_path) %>%
+    mutate(position = paste(V1, V3, sep = ":")) %>%
+    select(position, fraction_modified = V4)
+  
+  # Load and process reference data
+  reference_data <- read.table(reference_path, header = FALSE) %>%
+    filter(grepl(mod_type, V4)) %>%
+    mutate(position = gsub("s", "S", paste(V1, V3, sep = ":"))) %>%
+    select(position, modification = V4)
+  
+  # Join and classify
+  df <- df %>%
+    mutate(position = gsub("s", "S", position)) %>%
+    left_join(reference_data, by = "position") %>%
+    mutate(modification = ifelse(is.na(modification), "unmodified", modification),
+           actual = ifelse(grepl(mod_type, modification), 1, 0),
+           predicted = ifelse(fraction_modified > 10, 1, 0))
+  
+  # Create confusion matrix
+  conf_matrix <- table(Predicted = df$predicted, Actual = df$actual)
+  conf_matrix_df <- as.data.frame(conf_matrix)
+  colnames(conf_matrix_df) <- c("Predicted", "Actual", "Count")
+  
+  # Plot
+  ggplot(conf_matrix_df, aes(x = Actual, y = Predicted, fill = Count)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Count), vjust = 0.5, size = 6, color = "black") +
+    scale_fill_gradient(low = "white", high = "#4E79A7") +
+    labs(title = paste("Confusion Matrix for", mod_type),
+         x = "Actual", y = "Predicted") +
+    theme_minimal()
+}
+
+# Ψ in Yeast 
+plot_conf_matrix(
+  data_path = "BY4741-1_rep2.bedgraph",
+  reference_path = "Yeast_rRNAmods_track.bed",
+  mod_type = "Ψ"
+)
+
+# Ψ in E. coli 
+plot_conf_matrix(
+  data_path = "BW25113_R1_rep1.bedgraph",
+  reference_path = "rRNA_Ecoli_Mods.bed",
+  mod_type = "Ψ"
+)
+
+# m5C in Yeast 
+plot_conf_matrix(
+  data_path = "BY4741-1_rep2.bedgraph",
+  reference_path = "Yeast_rRNAmods_track.bed",
+  mod_type = "m5C"
+)
+
+# m5C in E. coli 
+plot_conf_matrix(
+  data_path = "BW25113_R1_rep1.bedgraph",
+  reference_path = "rRNA_Ecoli_Mods.bed",
+  mod_type = "m5C"
+)
 
 
 
