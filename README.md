@@ -58,5 +58,5 @@ Install key dependencies manually:
 ## Citation
 If you find this work/code useful, please cite our manuscript: 
 
-Diensthuber G, Milenkovic I, Llovera L, Milovanovic A, Pelizzari F and Novoa EM. **Systematic benchmarking of basecalling models for RNA modification detection with highly-multiplexed nanopore sequencing** [bioRxiv, 2025](https://www.biorxiv.org/content/10.1101/2025.07.11.663424v1). (accepted in Nucleic Acids Research)
+Diensthuber G, Milenkovic I, Llovera L, Milovanovic A, Pelizzari F and Novoa EM. **Systematic benchmarking of dorado basecalling models for RNA modification detection with highly-multiplexed nanopore sequencing** [bioRxiv, 2025](https://www.biorxiv.org/content/10.1101/2025.07.11.663424v1). (accepted in Nucleic Acids Research)
 
