@@ -1,4 +1,4 @@
-# Benchmarking of modification-aware basecalling models
+# Benchmarking of dorado modification-aware basecalling models
 
 ![](./img/Fig4B_snapshot.png "Figure 4B")
 
